@@ -1,9 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const Property = require("../models/properties");
+const { Property, validateProperty } = require("../models/properties");
 
 //POST: POST A NEW PROPERTY
-router.post("/", (req, res) => {
+router.post("/", async (req, res) => {
+  const error = await validateProperty(req.body);
+  if (error.message) res.status(400).send(error.message);
   property = new Property({
     adress: {
       country: req.body.country,
