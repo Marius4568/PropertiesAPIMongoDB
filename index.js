@@ -4,8 +4,16 @@ const express = require("express");
 const mongoose = require("mongoose");
 const app = express();
 require("dotenv").config();
+const propertiesRoute = require("./routes/properties");
 
 const PORT = process.env.PORT || 3000;
+
+//middlewares
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+//routes
+app.use("/api/properties", propertiesRoute);
 
 // connect to MongoDBAtlas
 async function mongooseConnect() {
