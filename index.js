@@ -28,7 +28,7 @@ const logger = winston.createLogger({
 });
 
 //routes
-app.use("/api/properties", propertiesRoute);
+app.use("/properties", propertiesRoute);
 
 // connect to MongoDBAtlas
 async function mongooseConnect() {

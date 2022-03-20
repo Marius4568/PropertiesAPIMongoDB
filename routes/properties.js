@@ -29,15 +29,22 @@ router.post("/", async (req, res) => {
 });
 
 //GET ALL PROPERTIES
-router.get("/", (req, res) => {
-  Property.find()
-    .then((properties) => res.send(properties))
-    .catch((err) => res.status(500).send("bad stuff happened"));
+router.get("/", async (req, res) => {
+  try {
+    const allProperties = await Property.find();
+    if (allProperties.length > 0) {
+      res.send(allProperties);
+    } else {
+      res.status(404).send("no properties found");
+    }
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
 });
 
 //GET THE PROPERTY BY ID
 
-router.get("/:propertyId", async (req, res) => {
+router.get("/id/:propertyId", async (req, res) => {
   try {
     const propertyById = await Property.findById(req.params.propertyId);
     if (propertyById) res.send(propertyById);
@@ -48,14 +55,24 @@ router.get("/:propertyId", async (req, res) => {
 });
 
 //GET THE PROPERTY BY Country
-router.get("/countries/search", async (req, res) => {
+router.get("/countries", async (req, res) => {
   try {
-    const queryArr = req.query.arr.split(",");
-    const propertiesByCountry = await Property.find({
-      "adress.country": { $in: queryArr },
-    });
-    if (propertiesByCountry) res.send(propertiesByCountry);
-    res.status(404).send("no properties found");
+    if (
+      Object.keys(req.query).includes("countries") &&
+      req.query.countries.length > 0
+    ) {
+      const queryArr = req.query.countries.split(",");
+      const propertiesByCountry = await Property.find({
+        "adress.country": { $in: queryArr },
+      });
+      if (propertiesByCountry.length > 0) {
+        res.send(propertiesByCountry);
+      } else {
+        res.status(404).send("no properties found");
+      }
+    } else {
+      res.status(404).send("no properties found");
+    }
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -63,7 +80,7 @@ router.get("/countries/search", async (req, res) => {
 
 //Update Book based on ID
 
-router.put("/:propertyId", async (req, res) => {
+router.put("/updateid/:propertyId", async (req, res) => {
   const propertyById = await Property.findByIdAndUpdate(
     req.params.propertyId,
     {
@@ -86,7 +103,7 @@ router.put("/:propertyId", async (req, res) => {
 
 //DELETE book based on id
 
-router.delete("/:propertyId", async (req, res) => {
+router.delete("/deleteid/:propertyId", async (req, res) => {
   const property = await Property.findByIdAndRemove(req.params.propertyId);
 
   if (!property) res.status(404).send("property not found");
