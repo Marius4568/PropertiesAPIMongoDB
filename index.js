@@ -6,12 +6,14 @@ const app = express();
 require("dotenv").config();
 const propertiesRoute = require("./routes/properties");
 const winston = require("winston");
+const cors = require("cors");
 
 const PORT = process.env.PORT || 3000;
 
 //middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 
 //logger
 const logger = winston.createLogger({
