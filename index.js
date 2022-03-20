@@ -5,12 +5,27 @@ const mongoose = require("mongoose");
 const app = express();
 require("dotenv").config();
 const propertiesRoute = require("./routes/properties");
+const winston = require("winston");
 
 const PORT = process.env.PORT || 3000;
 
 //middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+//logger
+const logger = winston.createLogger({
+  level: "info",
+  transports: [
+    new winston.transports.Console({
+      format: winston.format.combine(winston.format.colorize({ all: true })),
+    }),
+    new winston.transports.File({ filename: "error.log", level: "error" }),
+  ],
+  exceptionHandlers: [
+    new winston.transports.File({ filename: "exceptions.log" }),
+  ],
+});
 
 //routes
 app.use("/api/properties", propertiesRoute);
@@ -22,9 +37,9 @@ async function mongooseConnect() {
       useNewUrlParser: true,
     });
 
-    console.log("connected to mongo");
+    logger.info("connected to MongoDB Atlas");
   } catch (err) {
-    console.log(err);
+    logger.error(err.message);
   }
 }
 
@@ -32,5 +47,5 @@ mongooseConnect();
 
 //start server
 app.listen(PORT, () => {
-  console.log("server started at Port " + PORT);
+  logger.info(`server started at Port ${PORT}`);
 });
