@@ -41,10 +41,11 @@ router.get("/", async (req, res) => {
       .limit(limit);
 
     if (allProperties.length > 0) {
-      allProperties.allDocuments = allDocuments;
-      allProperties.limit = limit;
-      allProperties.totalPages =
-        (allDocuments - (allDocuments % limit)) / limit;
+      const totalPages = (allDocuments - (allDocuments % limit)) / limit;
+
+      res.append("limit", limit);
+      res.append("allDocuments", allDocuments);
+      res.append("totalPages", totalPages);
       res.send(allProperties);
     } else {
       res.status(404).send("no properties found");
@@ -90,10 +91,10 @@ router.get("/countries", async (req, res) => {
           "adress.country": { $in: queryArr },
         }).exec();
 
-        propertiesByCountry.allDocuments = allDocuments;
-        propertiesByCountry.limit = limit;
-        propertiesByCountry.totalPages =
-          (allDocuments - (allDocuments % limit)) / limit;
+        const totalPages = (allDocuments - (allDocuments % limit)) / limit;
+        res.append("limit", limit);
+        res.append("allDocuments", allDocuments);
+        res.append("totalPages", totalPages);
       } else {
         const queryArr = req.query.countries.split(",");
         propertiesByCountry = await Property.find({
