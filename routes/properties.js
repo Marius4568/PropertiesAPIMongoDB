@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const { Property, validateProperty } = require("../models/properties");
 
+async function paginate() {}
+
 //POST: POST A NEW PROPERTY
 router.post("/", async (req, res) => {
   const error = await validateProperty(req.body);
@@ -31,8 +33,18 @@ router.post("/", async (req, res) => {
 //GET ALL PROPERTIES
 router.get("/", async (req, res) => {
   try {
-    const allProperties = await Property.find();
+    const page = Number(req.query.page);
+    const limit = Number(req.query.limit);
+    const allDocuments = await Property.countDocuments().exec();
+    const allProperties = await Property.find()
+      .skip(page * limit)
+      .limit(limit);
+
     if (allProperties.length > 0) {
+      allProperties.allDocuments = allDocuments;
+      allProperties.limit = limit;
+      allProperties.totalPages =
+        (allDocuments - (allDocuments % limit)) / limit;
       res.send(allProperties);
     } else {
       res.status(404).send("no properties found");
@@ -57,15 +69,40 @@ router.get("/id/:propertyId", async (req, res) => {
 //GET THE PROPERTY BY Country
 router.get("/countries", async (req, res) => {
   try {
+    let propertiesByCountry = "";
     if (
       Object.keys(req.query).includes("countries") &&
       req.query.countries.length > 0
     ) {
-      const queryArr = req.query.countries.split(",");
-      const propertiesByCountry = await Property.find({
-        "adress.country": { $in: queryArr },
-      });
+      if (
+        Object.keys(req.query).includes("page") &&
+        Object.keys(req.query).includes("limit")
+      ) {
+        const page = Number(req.query.page);
+        const limit = Number(req.query.limit);
+        const queryArr = req.query.countries.split(",");
+        propertiesByCountry = await Property.find({
+          "adress.country": { $in: queryArr },
+        })
+          .skip(page * limit)
+          .limit(limit);
+        const allDocuments = await Property.countDocuments({
+          "adress.country": { $in: queryArr },
+        }).exec();
+
+        propertiesByCountry.allDocuments = allDocuments;
+        propertiesByCountry.limit = limit;
+        propertiesByCountry.totalPages =
+          (allDocuments - (allDocuments % limit)) / limit;
+      } else {
+        const queryArr = req.query.countries.split(",");
+        propertiesByCountry = await Property.find({
+          "adress.country": { $in: queryArr },
+        });
+      }
+
       if (propertiesByCountry.length > 0) {
+        console.log(propertiesByCountry);
         res.send(propertiesByCountry);
       } else {
         res.status(404).send("no properties found");
@@ -78,7 +115,7 @@ router.get("/countries", async (req, res) => {
   }
 });
 
-//Update Book based on ID
+//Update Property based on ID
 
 router.put("/updateid/:propertyId", async (req, res) => {
   const propertyById = await Property.findByIdAndUpdate(
@@ -97,8 +134,11 @@ router.put("/updateid/:propertyId", async (req, res) => {
     { new: true }
   );
 
-  if (!propertyById) res.status(404).send("property not found");
-  res.send(propertyById);
+  if (!propertyById) {
+    res.status(404).send("property not found");
+  } else {
+    res.send(propertyById);
+  }
 });
 
 //DELETE book based on id
@@ -106,8 +146,11 @@ router.put("/updateid/:propertyId", async (req, res) => {
 router.delete("/deleteid/:propertyId", async (req, res) => {
   const property = await Property.findByIdAndRemove(req.params.propertyId);
 
-  if (!property) res.status(404).send("property not found");
-  res.send(property);
+  if (!property) {
+    res.status(404).send("property not found");
+  } else {
+    res.send(property);
+  }
 });
 
 module.exports = router;
