@@ -103,7 +103,7 @@ router.get("/countries", async (req, res) => {
       }
 
       if (propertiesByCountry.length > 0) {
-        console.log(propertiesByCountry);
+        console.log();
         res.send({ ...propertiesByCountry, limit: "2" });
       } else {
         res.status(404).send("no properties found");
